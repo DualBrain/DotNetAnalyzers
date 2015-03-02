@@ -80,6 +80,8 @@
     <Compile Include="OData\ODataDateTimeOffsetCodeFix.vb" />
     <Compile Include="OData\ODataEnableQueryAnalyzer.vb" />
     <Compile Include="OData\ODataEnableQueryCodeFix.vb" />
+    <Compile Include="Windows\DateTimeOffsetAnalyzer.vb" />
+    <Compile Include="Windows\DateTimeOffsetCodeFix.vb" />
     <Compile Include="Windows\MakeIDataServiceRefactoring.vb" />
     <Compile Include="Windows\MakeMessengerRefactoring.vb" />
     <Compile Include="Windows\MakeRelayCommandRefactoring.vb" />

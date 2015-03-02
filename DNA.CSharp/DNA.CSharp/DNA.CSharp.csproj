@@ -39,7 +39,8 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
-    <Compile Include="WPF\MakeIDataServiceRefactoring.cs" />
+    <Compile Include="Windows\MakeIDataServiceRefactoring.cs" />
+    <Compile Include="Windows\ObservableCollectionAnalyzer.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Resources.resx">

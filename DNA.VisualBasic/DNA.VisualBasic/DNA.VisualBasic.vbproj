@@ -80,12 +80,12 @@
     <Compile Include="OData\ODataDateTimeOffsetCodeFix.vb" />
     <Compile Include="OData\ODataEnableQueryAnalyzer.vb" />
     <Compile Include="OData\ODataEnableQueryCodeFix.vb" />
-    <Compile Include="WPF\MakeIDataServiceRefactoring.vb" />
-    <Compile Include="WPF\MakeMessengerRefactoring.vb" />
-    <Compile Include="WPF\MakeRelayCommandRefactoring.vb" />
-    <Compile Include="WPF\MakeServiceLocatorRefactoring.vb" />
-    <Compile Include="WPF\MakeViewModelBaseRefactoring.vb" />
-    <Compile Include="WPF\ObservableCollectionAnalyzer.vb" />
+    <Compile Include="Windows\MakeIDataServiceRefactoring.vb" />
+    <Compile Include="Windows\MakeMessengerRefactoring.vb" />
+    <Compile Include="Windows\MakeRelayCommandRefactoring.vb" />
+    <Compile Include="Windows\MakeServiceLocatorRefactoring.vb" />
+    <Compile Include="Windows\MakeViewModelBaseRefactoring.vb" />
+    <Compile Include="Windows\ObservableCollectionAnalyzer.vb" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="My Project\Resources.resx">

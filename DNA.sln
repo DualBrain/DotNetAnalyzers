@@ -24,6 +24,11 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DNA.CSharp.Test", "DNA.CSha
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DNA.CSharp.Vsix", "DNA.CSharp\DNA.CSharp.Vsix\DNA.CSharp.Vsix.csproj", "{7D6A6261-BD9C-477F-BC9E-B4CC9BE575B4}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "docs", "docs", "{2716ABA2-1237-412D-AB79-92236176AA3A}"
+	ProjectSection(SolutionItems) = preProject
+		..\..\Users\Alessandro\Documents\DNA_VisualBasic.docx = ..\..\Users\Alessandro\Documents\DNA_VisualBasic.docx
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU

@@ -76,6 +76,8 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
+    <Compile Include="OData\ODataCheckFromODataUriAnalyzer.vb" />
+    <Compile Include="OData\ODataCheckFromODataUriCodeFix.vb" />
     <Compile Include="OData\ODataDateTimeOffsetAnalyzer.vb" />
     <Compile Include="OData\ODataDateTimeOffsetCodeFix.vb" />
     <Compile Include="OData\ODataEnableQueryAnalyzer.vb" />

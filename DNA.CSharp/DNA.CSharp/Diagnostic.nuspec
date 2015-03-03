@@ -2,18 +2,18 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2011/08/nuspec.xsd">
   <metadata>
     <id>DNA.CSharp</id>
-    <version>1.0.0.0</version>
-    <title>DNA.CSharp</title>
-    <authors>DNA.CSharp</authors>
-    <owners>DNA.CSharp</owners>
-    <licenseUrl>http://LICENSE_URL_HERE_OR_DELETE_THIS_LINE</licenseUrl>
-    <projectUrl>http://PROJECT_URL_HERE_OR_DELETE_THIS_LINE</projectUrl>
-    <iconUrl>http://ICON_URL_HERE_OR_DELETE_THIS_LINE</iconUrl>
-    <requireLicenseAcceptance>false</requireLicenseAcceptance>
-    <description>DNA.CSharp</description>
-    <releaseNotes>Summary of changes made in this release of the package.</releaseNotes>
-    <copyright>Copyright</copyright>
-    <tags>DNA.CSharp, analyzers</tags>
+    <version>0.0.0.1</version>
+    <title>DNA .NET Analyzers (C#)</title>
+    <authors>Visual Basic Tips &amp; Tricks</authors>
+    <owners>Visual Basic Tips &amp; Tricks</owners>
+    <licenseUrl>http://www.apache.org/licenses/LICENSE-2.0</licenseUrl>
+    <projectUrl>https://github.com/VisualBasicTipsTricks/DotNetAnalyzers/</projectUrl>
+    <iconUrl>>http://www.visual-basic.it/Portals/0/Contents/images/dna_icon.png</iconUrl>
+    <requireLicenseAcceptance>true</requireLicenseAcceptance>
+    <description>DNA .NET Analyzers, a collection of diagnostics and refactorings for Visual C# from the developer community</description>
+    <releaseNotes>Preview release.</releaseNotes>
+    <copyright>Visual Basic Tips &amp; Tricks</copyright>
+    <tags>CSharp, Roslyn, analyzers</tags>
     <frameworkAssemblies>
       <frameworkAssembly assemblyName="System" targetFramework="" />
     </frameworkAssemblies>

@@ -37,7 +37,7 @@ namespace DNA.CSharp.Windows
             }
 
             //Check if the node contains bindable properties
-            dynamic leftPart = node.Left.ToFullString();
+            var leftPart = node.Left.ToFullString();
             if (leftPart.Contains("ItemsSource") == false)
             {
                 if (leftPart.Contains("DataContext") == false)
@@ -47,7 +47,7 @@ namespace DNA.CSharp.Windows
             }
 
             string returnType = "";
-            dynamic symbolInfo = context.SemanticModel.GetSymbolInfo(node.Right).Symbol;
+            var symbolInfo = context.SemanticModel.GetSymbolInfo(node.Right).Symbol;
             //Check if local variable
             if ((symbolInfo) is ILocalSymbol)
             {
@@ -75,7 +75,7 @@ namespace DNA.CSharp.Windows
 
             if (returnType.ToLowerInvariant().Contains("system.collections.generic.list(of"))
             {
-                dynamic diagn = Diagnostic.Create(Rule, node.Right.GetLocation(), node.Right.ToString());
+                var diagn = Diagnostic.Create(Rule, node.Right.GetLocation(), node.Right.ToString());
                 context.ReportDiagnostic(diagn);
             }
         }

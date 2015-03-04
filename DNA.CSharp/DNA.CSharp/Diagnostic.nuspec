@@ -8,7 +8,7 @@
     <owners>Visual Basic Tips &amp; Tricks</owners>
     <licenseUrl>http://www.apache.org/licenses/LICENSE-2.0</licenseUrl>
     <projectUrl>https://github.com/VisualBasicTipsTricks/DotNetAnalyzers/</projectUrl>
-    <iconUrl>>http://www.visual-basic.it/Portals/0/Contents/images/dna_icon.png</iconUrl>
+    <iconUrl>http://www.visual-basic.it/Portals/0/Contents/images/dna_icon.png</iconUrl>
     <requireLicenseAcceptance>true</requireLicenseAcceptance>
     <description>DNA .NET Analyzers, a collection of diagnostics and refactorings for Visual C# from the developer community</description>
     <releaseNotes>Preview release.</releaseNotes>

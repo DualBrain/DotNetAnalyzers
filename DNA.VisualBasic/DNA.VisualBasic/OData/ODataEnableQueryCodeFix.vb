@@ -47,10 +47,11 @@ Public Class ODataEnableQueryCodeFix
 
         Dim root = Await document.GetSyntaxRootAsync
 
-        Dim newMethod = node.WithAttributeLists(node.AttributeLists.Add(SyntaxFactory.AttributeList(
+        'node is a MethodStatementSyntax
+        Dim newMethod = node.WithoutLeadingTrivia.WithAttributeLists(node.AttributeLists.Add(SyntaxFactory.AttributeList(
                     SyntaxFactory.SingletonSeparatedList(Of AttributeSyntax)(
                         SyntaxFactory.Attribute(
-                            SyntaxFactory.IdentifierName("EnableQuery"))))))
+                            SyntaxFactory.IdentifierName("EnableQuery")))))).WithLeadingTrivia(node.GetLeadingTrivia)
 
         Dim newRoot = root.ReplaceNode(node, newMethod)
         Dim newDocument = document.WithSyntaxRoot(newRoot)

@@ -15,7 +15,7 @@ Public Class DateTimeOffsetCodeFix
     Inherits CodeFixProvider
 
     ' TODO: Replace with actual diagnostic id that should trigger this fix.
-    Public Const DiagnosticId As String = NameOf(DateTimeOffsetAnalyzer.DiagnosticId)
+    Public Const DiagnosticId As String = DateTimeOffsetAnalyzer.DiagnosticId
 
     Public NotOverridable Overrides ReadOnly Property FixableDiagnosticIds As ImmutableArray(Of String)
         Get

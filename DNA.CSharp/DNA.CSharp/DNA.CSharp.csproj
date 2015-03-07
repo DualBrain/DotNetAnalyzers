@@ -33,6 +33,10 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Helpers\HelperMethods.cs" />
+    <Compile Include="OData\ODataDateTimeOffsetAnalyzer.cs" />
+    <Compile Include="OData\ODataDateTimeOffsetCodeFix.cs" />
+    <Compile Include="OData\ODataEnableQueryAnalyzer.cs" />
+    <Compile Include="OData\ODataEnableQueryCodeFix.cs" />
     <Compile Include="OData\ODataFromODataUriAnalyzer.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Resources.Designer.cs">

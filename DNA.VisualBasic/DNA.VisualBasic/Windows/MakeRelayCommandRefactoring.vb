@@ -2,9 +2,12 @@
 Imports Microsoft.CodeAnalysis
 Imports Microsoft.CodeAnalysis.CodeActions
 Imports Microsoft.CodeAnalysis.CodeRefactorings
+Imports Microsoft.CodeAnalysis.Formatting
 Imports Microsoft.CodeAnalysis.Rename
+Imports Microsoft.CodeAnalysis.Simplification
 Imports Microsoft.CodeAnalysis.Text
 Imports Microsoft.CodeAnalysis.VisualBasic
+Imports Microsoft.CodeAnalysis.VisualBasic.Extensions
 Imports Microsoft.CodeAnalysis.VisualBasic.Syntax
 
 <ExportCodeRefactoringProvider(LanguageNames.VisualBasic, Name:=NameOf(MakeRelayCommandRefactoring))>
@@ -31,8 +34,7 @@ Friend Class MakeRelayCommandRefactoring
     Private Async Function RebuildClassAsync(document As Document, classDeclaration As ClassStatementSyntax,
                                         cancellationToken As CancellationToken) As Task(Of Document)
 
-        Dim newClass = "Public Class RelayCommand(Of T)
-    Implements ICommand
+        Dim newImplementation = "Implements ICommand
 
     Private ReadOnly _execute As Action(Of T)
     Private ReadOnly _canExecute As Predicate(Of T)
@@ -67,12 +69,32 @@ Friend Class MakeRelayCommandRefactoring
 
     Public Sub Execute(ByVal parameter As Object) Implements ICommand.Execute
         _execute(CType(parameter, T))
-    End Sub
-End Class"
+    End Sub"
+
+        Dim newClassTree = SyntaxFactory.ParseSyntaxTree(newImplementation).
+                GetRoot().DescendantNodes().
+                Where(Function(n) n.IsKind(SyntaxKind.FieldDeclaration) OrElse n.IsKind(SyntaxKind.SubBlock) OrElse n.IsKind(SyntaxKind.FunctionBlock) _
+                OrElse n.IsKind(SyntaxKind.ConstructorBlock) OrElse n.IsKind(SyntaxKind.EventBlock)).
+                Cast(Of StatementSyntax).
+                Select(Function(decl) decl.WithAdditionalAnnotations(Formatter.Annotation, Simplifier.Annotation)).
+                ToArray()
+
+        Dim parentBlock = TryCast(classDeclaration.Parent, ClassBlockSyntax)
+
+        Dim newClassBlock = SyntaxFactory.ClassBlock(SyntaxFactory.ClassStatement("RelayCommand").
+                                                     AddTypeParameterListParameters(SyntaxFactory.TypeParameter("T")))
+
+        newClassBlock = newClassBlock.AddImplements(SyntaxFactory.
+                                                    ImplementsStatement(SyntaxFactory.ParseToken("Implements"),
+                                                                        SyntaxFactory.SingletonSeparatedList(Of TypeSyntax) _
+                                                                        (SyntaxFactory.ParseTypeName("ICommand"))))
+        newClassBlock = newClassBlock.WithEndClassStatement(SyntaxFactory.EndClassStatement())
+
+        Dim newClassNode = newClassBlock.AddMembers(newClassTree)
 
         Dim root = Await document.GetSyntaxRootAsync
 
-        Dim newRoot As SyntaxNode = SyntaxFactory.ParseCompilationUnit(newClass)
+        Dim newRoot As SyntaxNode = root.ReplaceNode(parentBlock, newClassNode)
         Dim newDocument = document.WithSyntaxRoot(newRoot)
 
         Return newDocument

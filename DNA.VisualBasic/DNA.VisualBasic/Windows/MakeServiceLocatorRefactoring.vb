@@ -1,7 +1,7 @@
 ﻿Imports System.Threading
 Imports Microsoft.CodeAnalysis
 Imports Microsoft.CodeAnalysis.CodeActions
-Imports Microsoft.CodeAnalysis.CodeRefactorings
+Imports Microsoft.CodeAnalysis.CodeRefactorings, Microsoft.CodeAnalysis.Simplification, Microsoft.CodeAnalysis.Formatting
 Imports Microsoft.CodeAnalysis.Rename
 Imports Microsoft.CodeAnalysis.Text
 Imports Microsoft.CodeAnalysis.VisualBasic
@@ -30,9 +30,7 @@ Friend Class MakeServiceLocatorRefactoring
     Private Async Function MakeServiceLocatorAsync(document As Document, classDeclaration As ClassStatementSyntax,
                              cancellationToken As CancellationToken) As Task(Of Document)
 
-        Dim newClass = "Public Class ServiceLocator
-    Implements IServiceProvider
-
+        Dim newImplementation = "
     Private services As New Dictionary(Of Type, Object)()
 
     Public Function GetService(Of T)() As T
@@ -64,11 +62,30 @@ Friend Class MakeServiceLocatorRefactoring
         End SyncLock
         Return Nothing
     End Function
-End Class"
+"
+
+        Dim newClassTree = SyntaxFactory.ParseSyntaxTree(newImplementation).
+                GetRoot().DescendantNodes().
+                Where(Function(n) n.IsKind(SyntaxKind.FieldDeclaration) OrElse n.IsKind(SyntaxKind.SubBlock) OrElse n.IsKind(SyntaxKind.FunctionBlock)).
+                Cast(Of StatementSyntax).
+                Select(Function(decl) decl.WithAdditionalAnnotations(Formatter.Annotation, Simplifier.Annotation)).
+                ToArray()
+
+        Dim parentBlock = TryCast(classDeclaration.Parent, ClassBlockSyntax)
+
+        Dim newClassBlock = SyntaxFactory.ClassBlock(SyntaxFactory.ClassStatement("ServiceLocator"))
+
+        newClassBlock = newClassBlock.AddImplements(SyntaxFactory.
+                                                    ImplementsStatement(SyntaxFactory.ParseToken("Implements"),
+                                                                        SyntaxFactory.SingletonSeparatedList(Of TypeSyntax) _
+                                                                        (SyntaxFactory.ParseTypeName("IServiceProvider"))))
+        newClassBlock = newClassBlock.WithEndClassStatement(SyntaxFactory.EndClassStatement())
+
+        Dim newClassNode = newClassBlock.AddMembers(newClassTree)
 
         Dim root = Await document.GetSyntaxRootAsync
-        Dim newRoot As SyntaxNode = SyntaxFactory.ParseCompilationUnit(newClass)
 
+        Dim newRoot As SyntaxNode = root.ReplaceNode(parentBlock, newClassNode)
         Dim newDocument = document.WithSyntaxRoot(newRoot)
 
         Return newDocument

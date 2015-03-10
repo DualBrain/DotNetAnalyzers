@@ -1,11 +1,15 @@
 ﻿Imports System.Threading
 Imports Microsoft.CodeAnalysis
 Imports Microsoft.CodeAnalysis.CodeActions
-Imports Microsoft.CodeAnalysis.CodeRefactorings
+Imports Microsoft.CodeAnalysis.CodeRefactorings, Microsoft.CodeAnalysis.Formatting, Microsoft.CodeAnalysis.Simplification
+Imports Microsoft.CodeAnalysis.Editing
 Imports Microsoft.CodeAnalysis.Rename
 Imports Microsoft.CodeAnalysis.Text
 Imports Microsoft.CodeAnalysis.VisualBasic
+Imports Microsoft.CodeAnalysis.VisualBasic.Extensions
 Imports Microsoft.CodeAnalysis.VisualBasic.Syntax
+Imports System.Composition
+Imports Microsoft.CodeAnalysis.Host.Mef
 
 <ExportCodeRefactoringProvider(LanguageNames.VisualBasic, Name:=NameOf(MakeViewModelBaseRefactoring))>
 Friend Class MakeViewModelBaseRefactoring
@@ -30,11 +34,18 @@ Friend Class MakeViewModelBaseRefactoring
     Private Async Function MakeViewModelBaseAsync(document As Document, classDeclaration As ClassStatementSyntax,
                                      cancellationToken As CancellationToken) As Task(Of Document)
 
-        Dim newClass = "Imports System.ComponentModel
+        Dim newImplementation = $"
+    '{My.Resources.LocalResources.Uncomment}
+    'Dim myServiceLocator As New ServiceLocator
 
-Public MustInherit Class ViewModelBase
-    Implements INotifyPropertyChanged
+    'Public Function ServiceLocator() As ServiceLocator
+    '    Return Me.myServiceLocator
+    'End Function
 
+    'Public Function GetService(Of T)() As T
+    '    Return myServiceLocator.GetService(Of T)()
+    'End Function
+    
     Public Event PropertyChanged(ByVal sender As Object, ByVal e As System.ComponentModel.PropertyChangedEventArgs) Implements System.ComponentModel.INotifyPropertyChanged.PropertyChanged
 
     Protected Sub OnPropertyChanged(ByVal strPropertyName As String)
@@ -59,7 +70,7 @@ Public MustInherit Class ViewModelBase
     Public Sub VerifyPropertyName(ByVal propertyName As String)
         ' Verify that the property name matches a real,  
         ' public, instance property on this object.
-        If TypeDescriptor.GetProperties(Me)(propertyName) Is Nothing Then
+        If System.ComponentModel.TypeDescriptor.GetProperties(Me)(propertyName) Is Nothing Then
             Dim msg As String = ""Invalid Property name: "" & propertyName
 
             If Me.ThrowOnInvalidPropertyName Then
@@ -79,24 +90,42 @@ Public MustInherit Class ViewModelBase
             privateDisplayName = value
         End Set
     End Property
+"
 
-    'Uncomment the following lines if you implement a service locator
-    'Dim myServiceLocator As New ServiceLocator
+        Dim newClassRoot = SyntaxFactory.ParseSyntaxTree(newImplementation).GetRoot()
+        Dim newClassTree = newClassRoot.DescendantNodes().
+                Where(Function(n) n.IsKind(SyntaxKind.FieldDeclaration) OrElse n.IsKind(SyntaxKind.SubBlock) OrElse n.IsKind(SyntaxKind.FunctionBlock) _
+                OrElse n.IsKind(SyntaxKind.ConstructorBlock) OrElse n.IsKind(SyntaxKind.EventStatement) OrElse
+                n.IsKind(SyntaxKind.PropertyBlock)).
+                Cast(Of StatementSyntax).
+                Select(Function(decl) decl.WithAdditionalAnnotations(Formatter.Annotation, Simplifier.Annotation)).
+                ToArray()
 
-    'Public Function ServiceLocator() As ServiceLocator
-    '    Return Me.myServiceLocator
-    'End Function
+        Dim parentBlock = TryCast(classDeclaration.Parent, ClassBlockSyntax)
 
-    'Public Function GetService(Of T)() As T
-    '    Return myServiceLocator.GetService(Of T)()
-    'End Function
-End Class"
+        Dim generator = SyntaxGenerator.GetGenerator(document)
+
+        Dim newClassBlock = SyntaxFactory.ClassBlock(SyntaxFactory.ClassStatement("ViewModelBase").
+                                                     AddModifiers(SyntaxFactory.ParseToken("MustInherit")))
+
+        newClassBlock = generator.WithAccessibility(newClassBlock, Accessibility.Public)
+
+        newClassBlock = newClassBlock.AddImplements(SyntaxFactory.
+                                                    ImplementsStatement(SyntaxFactory.ParseToken("Implements"),
+                                                                        SyntaxFactory.SingletonSeparatedList(Of TypeSyntax) _
+                                                                        (SyntaxFactory.ParseTypeName("System.ComponentModel.INotifyPropertyChanged"))))
+
+        newClassBlock = newClassBlock.WithEndClassStatement(SyntaxFactory.EndClassStatement())
+
+        Dim newClassNode = newClassBlock.AddMembers(newClassTree)
 
         Dim root = Await document.GetSyntaxRootAsync
-        Dim newRoot As SyntaxNode = SyntaxFactory.ParseCompilationUnit(newClass)
+
+        Dim newRoot As SyntaxNode = root.ReplaceNode(parentBlock, newClassNode).NormalizeWhitespace
 
         Dim newDocument = document.WithSyntaxRoot(newRoot)
 
         Return newDocument
     End Function
 End Class
+

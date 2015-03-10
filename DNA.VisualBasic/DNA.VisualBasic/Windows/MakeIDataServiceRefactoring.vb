@@ -1,4 +1,5 @@
 ﻿Imports Microsoft.CodeAnalysis.CodeRefactorings
+Imports Microsoft.CodeAnalysis.Formatting, Microsoft.CodeAnalysis.Simplification
 Imports Microsoft.CodeAnalysis.Editing
 
 <ExportCodeRefactoringProvider(LanguageNames.VisualBasic, Name:=NameOf(MakeIDataServiceRefactoring))>
@@ -24,24 +25,37 @@ Friend Class MakeIDataServiceRefactoring
         context.RegisterRefactoring(action)
     End Function
 
-    Private Async Function MakeIDataServiceAsync(document As Document, classDeclaration As InterfaceStatementSyntax,
+    Private Async Function MakeIDataServiceAsync(document As Document, interfaceDeclaration As InterfaceStatementSyntax,
                             cancellationToken As CancellationToken) As Task(Of Document)
 
-        Dim newClass = "Public Interface IDataService
-
-    Sub Add(ByVal dataSource As Object)
+        Dim newImplementation = "Sub Add(ByVal dataSource As Object)
     Sub Delete(ByVal dataSource As Object)
     Sub Save(ByVal dataSource As Object)
     Function GetAllItems() As IQueryable(Of Object)
-End Interface"
+"
+
+
+        Dim newInterfaceTree = SyntaxFactory.ParseSyntaxTree(newImplementation).
+                GetRoot().DescendantNodes().
+                Where(Function(n) n.IsKind(SyntaxKind.SubBlock) OrElse n.IsKind(SyntaxKind.FunctionBlock)).
+                Cast(Of StatementSyntax).Select(Function(m) m.WithAdditionalAnnotations(Formatter.Annotation, Simplifier.Annotation)).ToArray
+
+        Dim parentBlock = TryCast(interfaceDeclaration.Parent, InterfaceBlockSyntax)
+
+        Dim newInterfaceBlock = SyntaxFactory.InterfaceBlock(SyntaxFactory.
+            InterfaceStatement("IDataService").AddModifiers(SyntaxFactory.ParseToken("Public"))).
+            WithTrailingTrivia(SyntaxFactory.EndOfLineTrivia(""))
+
+        newInterfaceBlock = newInterfaceBlock.WithEndInterfaceStatement(SyntaxFactory.EndInterfaceStatement)
+
+        Dim newClassNode = newInterfaceBlock.AddMembers(newInterfaceTree)
 
         Dim root = Await document.GetSyntaxRootAsync
-        'Dim a = root.DescendantNodes.OfType(Of InterfaceStatementSyntax).Where(Function(i) i.Identifier.ToString = classDeclaration.Identifier.ToString).FirstOrDefault
 
-        Dim newRoot As SyntaxNode = SyntaxFactory.ParseCompilationUnit(newClass)
-
+        Dim newRoot As SyntaxNode = root.ReplaceNode(parentBlock, newClassNode)
         Dim newDocument = document.WithSyntaxRoot(newRoot)
 
         Return newDocument
+
     End Function
 End Class

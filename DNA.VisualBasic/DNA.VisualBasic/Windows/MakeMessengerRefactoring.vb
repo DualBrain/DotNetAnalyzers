@@ -1,4 +1,6 @@
 ﻿Imports Microsoft.CodeAnalysis.CodeRefactorings
+Imports Microsoft.CodeAnalysis.Editing
+Imports Microsoft.CodeAnalysis.Formatting, Microsoft.CodeAnalysis.Simplification
 
 <ExportCodeRefactoringProvider(LanguageNames.VisualBasic, Name:=NameOf(MakeMessengerRefactoring))>
 Friend Class MakeMessengerRefactoring
@@ -27,12 +29,11 @@ Friend Class MakeMessengerRefactoring
     Private Async Function MakeMessengerAsync(document As Document, classDeclaration As ClassStatementSyntax,
                                 cancellationToken As CancellationToken) As Task(Of Document)
 
-        Dim newClass = "Imports System.Reflection
-Public Class Messenger
+        Dim newImplementation = $"
     Public Sub New()
     End Sub
 
-#Region ""Register""
+#Region ""{My.Resources.LocalResources.MessengerRegisterRegion}""
 
     Public Sub Register(ByVal message As String, ByVal callback As [Delegate])
 
@@ -44,7 +45,7 @@ Public Class Messenger
             Throw New ArgumentNullException(""callback"")
         End If
 
-        Dim parameters As ParameterInfo() = callback.Method.GetParameters()
+        Dim parameters As Reflection.ParameterInfo() = callback.Method.GetParameters()
 
         If parameters IsNot Nothing AndAlso parameters.Length > 1 Then
             Throw New InvalidOperationException(""The registered Delegate can have no more than one parameter."")
@@ -56,7 +57,7 @@ Public Class Messenger
 
 #End Region
 
-#Region ""NotifyColleagues""
+#Region ""{My.Resources.LocalResources.MessengerNotifyColleagues}""
 
     Public Sub NotifyColleagues(ByVal message As String)
 
@@ -88,7 +89,7 @@ Public Class Messenger
 
 #End Region
 
-#Region ""MessageToActionsMap [nested Class]""
+#Region ""MessageToActionsMap""
 
     ''' <summary> 
     ''' This class is an implementation detail of the Messenger class. 
@@ -100,14 +101,14 @@ Public Class Messenger
         Friend Sub New()
         End Sub
 
-        Friend Sub AddAction(ByVal message As String, ByVal target As Object, ByVal method As MethodInfo, ByVal actionType As Type)
+        Friend Sub AddAction(ByVal message As String, ByVal target As Object, ByVal method As Reflection.MethodInfo, ByVal actionType As Type)
 
             If message Is Nothing Then
-                Throw New ArgumentNullException(""message"")
+                Throw New ArgumentNullException(message)
             End If
 
             If method Is Nothing Then
-                Throw New ArgumentNullException(""method"")
+                Throw New ArgumentNullException(method.Name)
             End If
 
             SyncLock _map
@@ -123,7 +124,7 @@ Public Class Messenger
         Friend Function GetActions(ByVal message As String) As List(Of [Delegate])
 
             If message Is Nothing Then
-                Throw New ArgumentNullException(""message"")
+                Throw New ArgumentNullException(message)
             End If
 
             Dim actions As List(Of [Delegate])
@@ -169,17 +170,17 @@ Public Class Messenger
 
 #End Region
 
-#Region ""WeakAction [nested Class]""
+#Region ""WeakAction""
 
     ''' <summary> 
     ''' This class is an implementation detail of the MessageToActionsMap class. 
     ''' </summary> 
     Private Class WeakAction
         ReadOnly _delegateType As Type
-        ReadOnly _method As MethodInfo
+        ReadOnly _method As Reflection.MethodInfo
         ReadOnly _targetRef As WeakReference
 
-        Friend Sub New(ByVal target As Object, ByVal method As MethodInfo, ByVal parameterType As Type)
+        Friend Sub New(ByVal target As Object, ByVal method As Reflection.MethodInfo, ByVal parameterType As Type)
 
             If target Is Nothing Then
                 _targetRef = Nothing
@@ -227,16 +228,34 @@ Public Class Messenger
 
 #End Region
 
-#Region ""Fields""
-
     ReadOnly _messageToActionsMap As New MessageToActionsMap()
+"
 
-#End Region
+        Dim newClassRoot = SyntaxFactory.ParseSyntaxTree(newImplementation).GetRoot()
+        Dim newClassTree = newClassRoot.DescendantNodes().
+                Where(Function(n) n.IsKind(SyntaxKind.ClassBlock) OrElse n.IsKind(SyntaxKind.FieldDeclaration) _
+                OrElse n.IsKind(SyntaxKind.SubBlock) OrElse n.IsKind(SyntaxKind.FunctionBlock) _
+                OrElse n.IsKind(SyntaxKind.ConstructorBlock) OrElse n.IsKind(SyntaxKind.EventStatement) OrElse
+                n.IsKind(SyntaxKind.PropertyBlock)).
+                Cast(Of StatementSyntax).
+                Select(Function(decl) decl.WithAdditionalAnnotations(Formatter.Annotation, Simplifier.Annotation)).
+                ToArray()
 
-End Class"
+        Dim parentBlock = TryCast(classDeclaration.Parent, ClassBlockSyntax)
+
+        Dim generator = SyntaxGenerator.GetGenerator(document)
+
+        Dim newClassBlock = SyntaxFactory.ClassBlock(SyntaxFactory.ClassStatement("Messenger"))
+
+        newClassBlock = generator.WithAccessibility(newClassBlock, Accessibility.Public)
+
+        newClassBlock = newClassBlock.WithEndClassStatement(SyntaxFactory.EndClassStatement())
+
+        Dim newClassNode = newClassBlock.AddMembers(newClassTree)
 
         Dim root = Await document.GetSyntaxRootAsync
-        Dim newRoot As SyntaxNode = SyntaxFactory.ParseCompilationUnit(newClass)
+
+        Dim newRoot As SyntaxNode = root.ReplaceNode(parentBlock, newClassNode).NormalizeWhitespace
 
         Dim newDocument = document.WithSyntaxRoot(newRoot)
 

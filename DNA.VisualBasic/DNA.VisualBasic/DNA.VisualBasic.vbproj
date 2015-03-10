@@ -82,6 +82,11 @@
     <Compile Include="OData\ODataDateTimeOffsetCodeFix.vb" />
     <Compile Include="OData\ODataEnableQueryAnalyzer.vb" />
     <Compile Include="OData\ODataEnableQueryCodeFix.vb" />
+    <Compile Include="Resources\LocalResources.Designer.vb">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>LocalResources.resx</DependentUpon>
+    </Compile>
     <Compile Include="Windows\DateTimeOffsetAnalyzer.vb" />
     <Compile Include="Windows\DateTimeOffsetCodeFix.vb" />
     <Compile Include="Windows\MakeIDataServiceRefactoring.vb" />
@@ -97,6 +102,11 @@
       <LastGenOutput>Resources.Designer.vb</LastGenOutput>
       <CustomToolNamespace>My.Resources</CustomToolNamespace>
       <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\LocalResources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>LocalResources.Designer.vb</LastGenOutput>
+      <CustomToolNamespace>My.Resources</CustomToolNamespace>
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>

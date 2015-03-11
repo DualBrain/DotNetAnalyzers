@@ -11,6 +11,9 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Rename;
 using Microsoft.CodeAnalysis.Text;
+using Microsoft.CodeAnalysis.Formatting;
+using Microsoft.CodeAnalysis.Simplification;
+using Microsoft.CodeAnalysis.CSharp.Extensions;
 
 namespace DNA.CSharp.WPF
 {
@@ -37,18 +40,27 @@ namespace DNA.CSharp.WPF
             context.RegisterRefactoring(action);
         }
 
-        private async Task<Document> MakeIDataServiceAsync(Document document, InterfaceDeclarationSyntax classDeclaration, CancellationToken cancellationToken)
+        private async Task<Document> MakeIDataServiceAsync(Document document, InterfaceDeclarationSyntax interfaceDeclaration, CancellationToken cancellationToken)
         {
-            var newClass = @"    interface IDataService
-    {
+            var newImplementation = @"
         void Add(object dataSource);
         void Delete(object dataSource);
         void Save(object dataSource);
         System.Linq.IQueryable<object> GetAllItems();
-    }";
+";
+
+            var newInterfaceTree = SyntaxFactory.ParseSyntaxTree(newImplementation).
+        GetRoot().DescendantNodes().
+        Where(n=> n.IsKind(SyntaxKind.MethodDeclaration)).Cast<MethodDeclarationSyntax>().Select(m=> m.WithAdditionalAnnotations(Formatter.Annotation, Simplifier.Annotation)).ToArray();
+
+            var newInterfaceBlock = SyntaxFactory.InterfaceDeclaration("IDataService").
+                AddModifiers(SyntaxFactory.ParseToken("public")).WithOpenBraceToken(SyntaxFactory.ParseToken("{")).
+                WithCloseBraceToken(SyntaxFactory.ParseToken("}").WithTrailingTrivia(SyntaxFactory.CarriageReturnLineFeed));
+
+            var newInterfaceNode = newInterfaceBlock.AddMembers(newInterfaceTree).NormalizeWhitespace();
 
             var root = await document.GetSyntaxRootAsync();
-            SyntaxNode newRoot = SyntaxFactory.ParseCompilationUnit(newClass);
+            SyntaxNode newRoot = root.ReplaceNode(interfaceDeclaration, newInterfaceNode);
 
             var newDocument = document.WithSyntaxRoot(newRoot);
 

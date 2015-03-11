@@ -2,7 +2,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2011/08/nuspec.xsd">
   <metadata>
     <id>DNA.VisualBasic</id>
-    <version>0.0.0.1</version>
+    <version>0.0.0.2</version>
     <title>DNA .NET Analyzers (VB)</title>
     <authors>Visual Basic Tips &amp; Tricks</authors>
     <owners>Visual Basic Tips &amp; Tricks</owners>
